@@ -358,25 +358,35 @@ public class SpringApplication {
 			SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
 		// Create and configure the environment
+		System.out.println("1");
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		System.out.println("2");
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+		System.out.println("3");
 		listeners.environmentPrepared(environment);
+		System.out.println("4");
 		bindToSpringApplication(environment);
+		System.out.println("5");
 		if (!this.isCustomEnvironment) {
 			environment = new EnvironmentConverter(getClassLoader())
 					.convertEnvironmentIfNecessary(environment, deduceEnvironmentClass());
 		}
+		System.out.println("6");
 		ConfigurationPropertySources.attach(environment);
 		return environment;
 	}
 
 	private Class<? extends StandardEnvironment> deduceEnvironmentClass() {
+		System.out.println("5.1");
 		switch (this.webApplicationType) {
 		case SERVLET:
+			System.out.println("5.2");
 			return StandardServletEnvironment.class;
 		case REACTIVE:
+			System.out.println("5.3");
 			return StandardReactiveWebEnvironment.class;
 		default:
+			System.out.println("5.4");
 			return StandardEnvironment.class;
 		}
 	}
