@@ -306,12 +306,17 @@ public class SpringApplication {
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		listeners.starting();
 		try {
+			System.out.println("DefaultApplicationArguments");
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
 					args);
+			System.out.println("prepareEnvironment");
 			ConfigurableEnvironment environment = prepareEnvironment(listeners,
 					applicationArguments);
+			System.out.println("configureIgnoreBeanInfo");
 			configureIgnoreBeanInfo(environment);
+			System.out.println("banner before");
 			Banner printedBanner = printBanner(environment);
+			System.out.println("banner after");
 			context = createApplicationContext();
 			exceptionReporters = getSpringFactoriesInstances(
 					SpringBootExceptionReporter.class,
@@ -582,11 +587,14 @@ public class SpringApplication {
 		}
 		ResourceLoader resourceLoader = (this.resourceLoader != null)
 				? this.resourceLoader : new DefaultResourceLoader(getClassLoader());
+		System.out.println("resourceLoader after");
 		SpringApplicationBannerPrinter bannerPrinter = new SpringApplicationBannerPrinter(
 				resourceLoader, this.banner);
+		System.out.println("SpringApplicationBannerPrinter");
 		if (this.bannerMode == Mode.LOG) {
 			return bannerPrinter.print(environment, this.mainApplicationClass, logger);
 		}
+		System.out.println("begin print");
 		return bannerPrinter.print(environment, this.mainApplicationClass, System.out);
 	}
 
