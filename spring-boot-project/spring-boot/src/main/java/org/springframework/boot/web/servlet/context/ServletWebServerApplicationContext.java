@@ -58,6 +58,8 @@ import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.context.support.ServletContextScope;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+//import org.springframework.web.context.support.GenericWebApplicationContext;
+
 /**
  * A {@link WebApplicationContext} that can be used to bootstrap itself from a contained
  * {@link ServletWebServerFactory} bean.
@@ -174,6 +176,8 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	}
 
 	private void createWebServer() {
+		System.out.println(
+				"org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.createWebServer begin");
 		WebServer webServer = this.webServer;
 		ServletContext servletContext = getServletContext();
 		if (webServer == null && servletContext == null) {
@@ -190,6 +194,8 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 			}
 		}
 		initPropertySources();
+		System.out.println(
+				"org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.createWebServer end");
 	}
 
 	/**

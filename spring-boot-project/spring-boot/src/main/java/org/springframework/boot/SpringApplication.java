@@ -296,6 +296,8 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		System.out.println(
+				"org.springframework.boot.SpringApplication.run(java.lang.String...) running begin");
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		ConfigurableApplicationContext context = null;
@@ -316,7 +318,11 @@ public class SpringApplication {
 					new Class[] { ConfigurableApplicationContext.class }, context);
 			prepareContext(context, environment, listeners, applicationArguments,
 					printedBanner);
+			System.out.println(
+					"org.springframework.boot.SpringApplication.refreshContext begin");
 			refreshContext(context);
+			System.out.println(
+					"org.springframework.boot.SpringApplication.refreshContext end");
 			afterRefresh(context, applicationArguments);
 			stopWatch.stop();
 			if (this.logStartupInfo) {
@@ -338,6 +344,8 @@ public class SpringApplication {
 			handleRunFailure(context, ex, exceptionReporters, null);
 			throw new IllegalStateException(ex);
 		}
+		System.out.println(
+				"org.springframework.boot.SpringApplication.run(java.lang.String...) running end");
 		return context;
 	}
 
