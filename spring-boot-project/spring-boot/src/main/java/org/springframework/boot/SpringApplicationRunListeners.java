@@ -51,6 +51,7 @@ class SpringApplicationRunListeners {
 
 	public void environmentPrepared(ConfigurableEnvironment environment) {
 		for (SpringApplicationRunListener listener : this.listeners) {
+			System.out.println(listener.toString());
 			listener.environmentPrepared(environment);
 		}
 	}
