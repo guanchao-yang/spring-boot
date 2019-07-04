@@ -345,7 +345,8 @@ public class SpringApplication {
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
-			handleRunFailure(context, ex, exceptionReporters, listeners);
+			ex.printStackTrace();
+			// handleRunFailure(context, ex, exceptionReporters, listeners);
 			throw new IllegalStateException(ex);
 		}
 

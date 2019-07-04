@@ -42,6 +42,7 @@ public class ApplicationEnvironmentPreparedEvent extends SpringApplicationEvent 
 			ConfigurableEnvironment environment) {
 		super(application, args);
 		this.environment = environment;
+		System.out.println("ApplicationEnvironmentPreparedEvent init");
 	}
 
 	/**
