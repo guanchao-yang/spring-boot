@@ -33,6 +33,7 @@ import org.springframework.http.codec.CodecConfigurer;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.util.MimeType;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for
@@ -43,7 +44,7 @@ import org.springframework.util.MimeType;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(CodecConfigurer.class)
+@ConditionalOnClass({ CodecConfigurer.class, WebClient.class })
 @AutoConfigureAfter(JacksonAutoConfiguration.class)
 public class CodecsAutoConfiguration {
 
@@ -56,13 +57,11 @@ public class CodecsAutoConfiguration {
 		@Bean
 		@Order(0)
 		@ConditionalOnBean(ObjectMapper.class)
-		public CodecCustomizer jacksonCodecCustomizer(ObjectMapper objectMapper) {
+		CodecCustomizer jacksonCodecCustomizer(ObjectMapper objectMapper) {
 			return (configurer) -> {
 				CodecConfigurer.DefaultCodecs defaults = configurer.defaultCodecs();
-				defaults.jackson2JsonDecoder(
-						new Jackson2JsonDecoder(objectMapper, EMPTY_MIME_TYPES));
-				defaults.jackson2JsonEncoder(
-						new Jackson2JsonEncoder(objectMapper, EMPTY_MIME_TYPES));
+				defaults.jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper, EMPTY_MIME_TYPES));
+				defaults.jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper, EMPTY_MIME_TYPES));
 			};
 		}
 
@@ -74,7 +73,7 @@ public class CodecsAutoConfiguration {
 
 		@Bean
 		@Order(0)
-		public CodecCustomizer loggingCodecCustomizer(HttpProperties properties) {
+		CodecCustomizer loggingCodecCustomizer(HttpProperties properties) {
 			return (configurer) -> configurer.defaultCodecs()
 					.enableLoggingRequestDetails(properties.isLogRequestDetails());
 		}

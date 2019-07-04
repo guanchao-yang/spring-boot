@@ -20,8 +20,7 @@ import liquibase.integration.spring.SpringLiquibase;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnExposedEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.liquibase.LiquibaseEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,8 +41,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(SpringLiquibase.class)
-@ConditionalOnEnabledEndpoint(endpoint = LiquibaseEndpoint.class)
-@ConditionalOnExposedEndpoint(endpoint = LiquibaseEndpoint.class)
+@ConditionalOnAvailableEndpoint(endpoint = LiquibaseEndpoint.class)
 @AutoConfigureAfter(LiquibaseAutoConfiguration.class)
 public class LiquibaseEndpointAutoConfiguration {
 
@@ -60,18 +58,15 @@ public class LiquibaseEndpointAutoConfiguration {
 		return new BeanPostProcessor() {
 
 			@Override
-			public Object postProcessBeforeInitialization(Object bean, String beanName)
-					throws BeansException {
+			public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 				if (bean instanceof DataSourceClosingSpringLiquibase) {
-					((DataSourceClosingSpringLiquibase) bean)
-							.setCloseDataSourceOnceMigrated(false);
+					((DataSourceClosingSpringLiquibase) bean).setCloseDataSourceOnceMigrated(false);
 				}
 				return bean;
 			}
 
 			@Override
-			public Object postProcessAfterInitialization(Object bean, String beanName)
-					throws BeansException {
+			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 				return bean;
 			}
 

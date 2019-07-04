@@ -77,8 +77,7 @@ import org.springframework.web.util.pattern.PathPatternParser;
  * @author Brian Clozel
  * @since 2.0.0
  */
-public abstract class AbstractWebFluxEndpointHandlerMapping
-		extends RequestMappingInfoHandlerMapping {
+public abstract class AbstractWebFluxEndpointHandlerMapping extends RequestMappingInfoHandlerMapping {
 
 	private static final PathPatternParser pathPatternParser = new PathPatternParser();
 
@@ -90,11 +89,13 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 
 	private final CorsConfiguration corsConfiguration;
 
-	private final Method handleWriteMethod = ReflectionUtils.findMethod(
-			WriteOperationHandler.class, "handle", ServerWebExchange.class, Map.class);
+	private final Method handleWriteMethod = ReflectionUtils.findMethod(WriteOperationHandler.class, "handle",
+			ServerWebExchange.class, Map.class);
 
-	private final Method handleReadMethod = ReflectionUtils
-			.findMethod(ReadOperationHandler.class, "handle", ServerWebExchange.class);
+	private final Method handleReadMethod = ReflectionUtils.findMethod(ReadOperationHandler.class, "handle",
+			ServerWebExchange.class);
+
+	private final boolean shouldRegisterLinksMapping;
 
 	/**
 	 * Creates a new {@code AbstractWebFluxEndpointHandlerMapping} that provides mappings
@@ -103,14 +104,16 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	 * @param endpoints the web endpoints
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
 	 * @param corsConfiguration the CORS configuration for the endpoints
+	 * @param shouldRegisterLinksMapping whether the links endpoint should be registered
 	 */
 	public AbstractWebFluxEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<ExposableWebEndpoint> endpoints,
-			EndpointMediaTypes endpointMediaTypes, CorsConfiguration corsConfiguration) {
+			Collection<ExposableWebEndpoint> endpoints, EndpointMediaTypes endpointMediaTypes,
+			CorsConfiguration corsConfiguration, boolean shouldRegisterLinksMapping) {
 		this.endpointMapping = endpointMapping;
 		this.endpoints = endpoints;
 		this.endpointMediaTypes = endpointMediaTypes;
 		this.corsConfiguration = corsConfiguration;
+		this.shouldRegisterLinksMapping = shouldRegisterLinksMapping;
 		setOrder(-100);
 	}
 
@@ -121,7 +124,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 				registerMappingForOperation(endpoint, operation);
 			}
 		}
-		if (StringUtils.hasText(this.endpointMapping.getPath())) {
+		if (this.shouldRegisterLinksMapping) {
 			registerLinksMapping();
 		}
 	}
@@ -129,22 +132,18 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	@Override
 	protected HandlerMethod createHandlerMethod(Object handler, Method method) {
 		HandlerMethod handlerMethod = super.createHandlerMethod(handler, method);
-		return new WebFluxEndpointHandlerMethod(handlerMethod.getBean(),
-				handlerMethod.getMethod());
+		return new WebFluxEndpointHandlerMethod(handlerMethod.getBean(), handlerMethod.getMethod());
 	}
 
-	private void registerMappingForOperation(ExposableWebEndpoint endpoint,
-			WebOperation operation) {
-		ReactiveWebOperation reactiveWebOperation = wrapReactiveWebOperation(endpoint,
-				operation, new ReactiveWebOperationAdapter(operation));
+	private void registerMappingForOperation(ExposableWebEndpoint endpoint, WebOperation operation) {
+		ReactiveWebOperation reactiveWebOperation = wrapReactiveWebOperation(endpoint, operation,
+				new ReactiveWebOperationAdapter(operation));
 		if (operation.getType() == OperationType.WRITE) {
-			registerMapping(createRequestMappingInfo(operation),
-					new WriteOperationHandler((reactiveWebOperation)),
+			registerMapping(createRequestMappingInfo(operation), new WriteOperationHandler((reactiveWebOperation)),
 					this.handleWriteMethod);
 		}
 		else {
-			registerMapping(createRequestMappingInfo(operation),
-					new ReadOperationHandler((reactiveWebOperation)),
+			registerMapping(createRequestMappingInfo(operation), new ReadOperationHandler((reactiveWebOperation)),
 					this.handleReadMethod);
 		}
 	}
@@ -157,37 +156,34 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	 * @param reactiveWebOperation the reactive web operation to wrap
 	 * @return a wrapped reactive web operation
 	 */
-	protected ReactiveWebOperation wrapReactiveWebOperation(ExposableWebEndpoint endpoint,
-			WebOperation operation, ReactiveWebOperation reactiveWebOperation) {
+	protected ReactiveWebOperation wrapReactiveWebOperation(ExposableWebEndpoint endpoint, WebOperation operation,
+			ReactiveWebOperation reactiveWebOperation) {
 		return reactiveWebOperation;
 	}
 
 	private RequestMappingInfo createRequestMappingInfo(WebOperation operation) {
 		WebOperationRequestPredicate predicate = operation.getRequestPredicate();
-		PatternsRequestCondition patterns = new PatternsRequestCondition(pathPatternParser
-				.parse(this.endpointMapping.createSubPath(predicate.getPath())));
+		PatternsRequestCondition patterns = new PatternsRequestCondition(
+				pathPatternParser.parse(this.endpointMapping.createSubPath(predicate.getPath())));
 		RequestMethodsRequestCondition methods = new RequestMethodsRequestCondition(
 				RequestMethod.valueOf(predicate.getHttpMethod().name()));
 		ConsumesRequestCondition consumes = new ConsumesRequestCondition(
 				StringUtils.toStringArray(predicate.getConsumes()));
 		ProducesRequestCondition produces = new ProducesRequestCondition(
 				StringUtils.toStringArray(predicate.getProduces()));
-		return new RequestMappingInfo(null, patterns, methods, null, null, consumes,
-				produces, null);
+		return new RequestMappingInfo(null, patterns, methods, null, null, consumes, produces, null);
 	}
 
 	private void registerLinksMapping() {
 		PatternsRequestCondition patterns = new PatternsRequestCondition(
 				pathPatternParser.parse(this.endpointMapping.getPath()));
-		RequestMethodsRequestCondition methods = new RequestMethodsRequestCondition(
-				RequestMethod.GET);
+		RequestMethodsRequestCondition methods = new RequestMethodsRequestCondition(RequestMethod.GET);
 		ProducesRequestCondition produces = new ProducesRequestCondition(
 				StringUtils.toStringArray(this.endpointMediaTypes.getProduced()));
-		RequestMappingInfo mapping = new RequestMappingInfo(patterns, methods, null, null,
-				null, produces, null);
+		RequestMappingInfo mapping = new RequestMappingInfo(patterns, methods, null, null, null, produces, null);
 		LinksHandler linksHandler = getLinksHandler();
-		registerMapping(mapping, linksHandler, ReflectionUtils
-				.findMethod(linksHandler.getClass(), "links", ServerWebExchange.class));
+		registerMapping(mapping, linksHandler,
+				ReflectionUtils.findMethod(linksHandler.getClass(), "links", ServerWebExchange.class));
 	}
 
 	@Override
@@ -196,8 +192,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	}
 
 	@Override
-	protected CorsConfiguration initCorsConfiguration(Object handler, Method method,
-			RequestMappingInfo mapping) {
+	protected CorsConfiguration initCorsConfiguration(Object handler, Method method, RequestMappingInfo mapping) {
 		return this.corsConfiguration;
 	}
 
@@ -207,8 +202,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	}
 
 	@Override
-	protected RequestMappingInfo getMappingForMethod(Method method,
-			Class<?> handlerType) {
+	protected RequestMappingInfo getMappingForMethod(Method method, Class<?> handlerType) {
 		return null;
 	}
 
@@ -240,8 +234,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 
 		@Override
 		public Object invoke(InvocationContext context) {
-			return Mono.create(
-					(sink) -> Schedulers.elastic().schedule(() -> invoke(context, sink)));
+			return Mono.create((sink) -> Schedulers.elastic().schedule(() -> invoke(context, sink)));
 		}
 
 		private void invoke(InvocationContext context, MonoSink<Object> sink) {
@@ -272,8 +265,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	@FunctionalInterface
 	protected interface ReactiveWebOperation {
 
-		Mono<ResponseEntity<Object>> handle(ServerWebExchange exchange,
-				Map<String, String> body);
+		Mono<ResponseEntity<Object>> handle(ServerWebExchange exchange, Map<String, String> body);
 
 	}
 
@@ -281,8 +273,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 	 * Adapter class to convert an {@link OperationInvoker} into a
 	 * {@link ReactiveWebOperation}.
 	 */
-	private static final class ReactiveWebOperationAdapter
-			implements ReactiveWebOperation {
+	private static final class ReactiveWebOperationAdapter implements ReactiveWebOperation {
 
 		private final OperationInvoker invoker;
 
@@ -305,46 +296,40 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 		}
 
 		private Supplier<Mono<? extends SecurityContext>> getSecurityContextSupplier() {
-			if (ClassUtils.isPresent(
-					"org.springframework.security.core.context.ReactiveSecurityContextHolder",
+			if (ClassUtils.isPresent("org.springframework.security.core.context.ReactiveSecurityContextHolder",
 					getClass().getClassLoader())) {
 				return this::springSecurityContext;
 			}
 			return this::emptySecurityContext;
 		}
 
-		public Mono<? extends SecurityContext> springSecurityContext() {
+		Mono<? extends SecurityContext> springSecurityContext() {
 			return ReactiveSecurityContextHolder.getContext()
-					.map((securityContext) -> new ReactiveSecurityContext(
-							securityContext.getAuthentication()))
+					.map((securityContext) -> new ReactiveSecurityContext(securityContext.getAuthentication()))
 					.switchIfEmpty(Mono.just(new ReactiveSecurityContext(null)));
 		}
 
-		public Mono<SecurityContext> emptySecurityContext() {
+		Mono<SecurityContext> emptySecurityContext() {
 			return Mono.just(SecurityContext.NONE);
 		}
 
 		@Override
-		public Mono<ResponseEntity<Object>> handle(ServerWebExchange exchange,
-				Map<String, String> body) {
+		public Mono<ResponseEntity<Object>> handle(ServerWebExchange exchange, Map<String, String> body) {
 			Map<String, Object> arguments = getArguments(exchange, body);
 			return this.securityContextSupplier.get()
-					.map((securityContext) -> new InvocationContext(securityContext,
-							arguments))
-					.flatMap((invocationContext) -> handleResult(
-							(Publisher<?>) this.invoker.invoke(invocationContext),
+					.map((securityContext) -> new InvocationContext(securityContext, arguments))
+					.flatMap((invocationContext) -> handleResult((Publisher<?>) this.invoker.invoke(invocationContext),
 							exchange.getRequest().getMethod()));
 		}
 
-		private Map<String, Object> getArguments(ServerWebExchange exchange,
-				Map<String, String> body) {
+		private Map<String, Object> getArguments(ServerWebExchange exchange, Map<String, String> body) {
 			Map<String, Object> arguments = new LinkedHashMap<>();
 			arguments.putAll(getTemplateVariables(exchange));
 			if (body != null) {
 				arguments.putAll(body);
 			}
-			exchange.getRequest().getQueryParams().forEach((name, values) -> arguments
-					.put(name, (values.size() != 1) ? values : values.get(0)));
+			exchange.getRequest().getQueryParams()
+					.forEach((name, values) -> arguments.put(name, (values.size() != 1) ? values : values.get(0)));
 			return arguments;
 		}
 
@@ -352,14 +337,12 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 			return exchange.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 		}
 
-		private Mono<ResponseEntity<Object>> handleResult(Publisher<?> result,
-				HttpMethod httpMethod) {
+		private Mono<ResponseEntity<Object>> handleResult(Publisher<?> result, HttpMethod httpMethod) {
 			return Mono.from(result).map(this::toResponseEntity)
 					.onErrorMap(InvalidEndpointRequestException.class,
-							(ex) -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-									ex.getReason()))
-					.defaultIfEmpty(new ResponseEntity<>((httpMethod != HttpMethod.GET)
-							? HttpStatus.NO_CONTENT : HttpStatus.NOT_FOUND));
+							(ex) -> new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getReason()))
+					.defaultIfEmpty(new ResponseEntity<>(
+							(httpMethod != HttpMethod.GET) ? HttpStatus.NO_CONTENT : HttpStatus.NOT_FOUND));
 		}
 
 		private ResponseEntity<Object> toResponseEntity(Object response) {
@@ -390,7 +373,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 		}
 
 		@ResponseBody
-		public Publisher<ResponseEntity<Object>> handle(ServerWebExchange exchange,
+		Publisher<ResponseEntity<Object>> handle(ServerWebExchange exchange,
 				@RequestBody(required = false) Map<String, String> body) {
 			return this.operation.handle(exchange, body);
 		}
@@ -409,7 +392,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 		}
 
 		@ResponseBody
-		public Publisher<ResponseEntity<Object>> handle(ServerWebExchange exchange) {
+		Publisher<ResponseEntity<Object>> handle(ServerWebExchange exchange) {
 			return this.operation.handle(exchange, null);
 		}
 
@@ -429,8 +412,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 		@Override
 		public HandlerMethod createWithResolvedBean() {
 			HandlerMethod handlerMethod = super.createWithResolvedBean();
-			return new WebFluxEndpointHandlerMethod(handlerMethod.getBean(),
-					handlerMethod.getMethod());
+			return new WebFluxEndpointHandlerMethod(handlerMethod.getBean(), handlerMethod.getMethod());
 		}
 
 	}
@@ -456,8 +438,7 @@ public abstract class AbstractWebFluxEndpointHandlerMapping
 				role = this.roleVoter.getRolePrefix() + role;
 			}
 			return this.roleVoter.vote(this.authentication, null,
-					Collections.singletonList(new SecurityConfig(
-							role))) == AccessDecisionVoter.ACCESS_GRANTED;
+					Collections.singletonList(new SecurityConfig(role))) == AccessDecisionVoter.ACCESS_GRANTED;
 		}
 
 	}

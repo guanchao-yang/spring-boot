@@ -32,6 +32,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Nasko Vasilev
  * @author Mark Paluch
  * @author Artsiom Yudovin
+ * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "spring.data.mongodb")
 public class MongoProperties {
@@ -79,6 +80,7 @@ public class MongoProperties {
 	/**
 	 * Login user of the mongo server. Cannot be set with URI.
 	 */
+
 	private String username;
 
 	/**

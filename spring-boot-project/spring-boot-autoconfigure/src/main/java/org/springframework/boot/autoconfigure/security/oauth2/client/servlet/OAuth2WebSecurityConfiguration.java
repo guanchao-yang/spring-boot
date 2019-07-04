@@ -33,7 +33,6 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
  *
  * @author Madhura Bhave
  * @author Phillip Webb
- * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(ClientRegistrationRepository.class)
@@ -41,17 +40,14 @@ class OAuth2WebSecurityConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public OAuth2AuthorizedClientService authorizedClientService(
-			ClientRegistrationRepository clientRegistrationRepository) {
+	OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository clientRegistrationRepository) {
 		return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public OAuth2AuthorizedClientRepository authorizedClientRepository(
-			OAuth2AuthorizedClientService authorizedClientService) {
-		return new AuthenticatedPrincipalOAuth2AuthorizedClientRepository(
-				authorizedClientService);
+	OAuth2AuthorizedClientRepository authorizedClientRepository(OAuth2AuthorizedClientService authorizedClientService) {
+		return new AuthenticatedPrincipalOAuth2AuthorizedClientRepository(authorizedClientService);
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -60,8 +56,7 @@ class OAuth2WebSecurityConfiguration {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.authorizeRequests().anyRequest().authenticated().and().oauth2Login()
-					.and().oauth2Client();
+			http.authorizeRequests().anyRequest().authenticated().and().oauth2Login().and().oauth2Client();
 		}
 
 	}

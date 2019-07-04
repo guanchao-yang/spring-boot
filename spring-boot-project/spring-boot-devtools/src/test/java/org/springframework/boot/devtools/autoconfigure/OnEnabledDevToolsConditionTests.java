@@ -16,8 +16,10 @@
 
 package org.springframework.boot.devtools.autoconfigure;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -31,32 +33,32 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Madhura Bhave
  */
-public class OnEnabledDevToolsConditionTests {
+class OnEnabledDevToolsConditionTests {
 
 	private AnnotationConfigApplicationContext context;
 
-	@Before
-	public void setup() {
+	@BeforeEach
+	void setup() {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(TestConfiguration.class);
 	}
 
 	@Test
-	public void outcomeWhenDevtoolsShouldBeEnabledIsTrueShouldMatch() throws Exception {
+	void outcomeWhenDevtoolsShouldBeEnabledIsTrueShouldMatch() throws Exception {
+		AtomicBoolean containsBean = new AtomicBoolean();
 		Thread thread = new Thread(() -> {
 			OnEnabledDevToolsConditionTests.this.context.refresh();
-			assertThat(OnEnabledDevToolsConditionTests.this.context.containsBean("test"))
-					.isTrue();
+			containsBean.set(OnEnabledDevToolsConditionTests.this.context.containsBean("test"));
 		});
 		thread.start();
 		thread.join();
+		assertThat(containsBean).isTrue();
 	}
 
 	@Test
-	public void outcomeWhenDevtoolsShouldBeEnabledIsFalseShouldNotMatch() {
+	void outcomeWhenDevtoolsShouldBeEnabledIsFalseShouldNotMatch() {
 		OnEnabledDevToolsConditionTests.this.context.refresh();
-		assertThat(OnEnabledDevToolsConditionTests.this.context.containsBean("test"))
-				.isFalse();
+		assertThat(OnEnabledDevToolsConditionTests.this.context.containsBean("test")).isFalse();
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -64,7 +66,7 @@ public class OnEnabledDevToolsConditionTests {
 
 		@Bean
 		@Conditional(OnEnabledDevToolsCondition.class)
-		public String test() {
+		String test() {
 			return "hello";
 		}
 

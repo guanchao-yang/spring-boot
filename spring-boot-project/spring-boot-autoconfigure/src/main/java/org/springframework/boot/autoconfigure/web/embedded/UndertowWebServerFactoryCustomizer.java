@@ -16,6 +16,8 @@
 
 package org.springframework.boot.autoconfigure.web.embedded;
 
+import java.lang.reflect.Field;
+
 import io.undertow.UndertowOptions;
 import org.xnio.Option;
 
@@ -40,15 +42,14 @@ import org.springframework.util.unit.DataSize;
  * @author Rafiullah Hamedy
  * @since 2.0.0
  */
-public class UndertowWebServerFactoryCustomizer implements
-		WebServerFactoryCustomizer<ConfigurableUndertowWebServerFactory>, Ordered {
+public class UndertowWebServerFactoryCustomizer
+		implements WebServerFactoryCustomizer<ConfigurableUndertowWebServerFactory>, Ordered {
 
 	private final Environment environment;
 
 	private final ServerProperties serverProperties;
 
-	public UndertowWebServerFactoryCustomizer(Environment environment,
-			ServerProperties serverProperties) {
+	public UndertowWebServerFactoryCustomizer(Environment environment, ServerProperties serverProperties) {
 		this.environment = environment;
 		this.serverProperties = serverProperties;
 	}
@@ -62,96 +63,110 @@ public class UndertowWebServerFactoryCustomizer implements
 	public void customize(ConfigurableUndertowWebServerFactory factory) {
 		ServerProperties properties = this.serverProperties;
 		ServerProperties.Undertow undertowProperties = properties.getUndertow();
-		ServerProperties.Undertow.Accesslog accesslogProperties = undertowProperties
-				.getAccesslog();
+		ServerProperties.Undertow.Options undertowOptions = undertowProperties.getOptions();
+		ServerProperties.Undertow.Accesslog accesslogProperties = undertowProperties.getAccesslog();
 		PropertyMapper propertyMapper = PropertyMapper.get().alwaysApplyingWhenNonNull();
-		propertyMapper.from(undertowProperties::getBufferSize).whenNonNull()
-				.asInt(DataSize::toBytes).to(factory::setBufferSize);
+		propertyMapper.from(undertowProperties::getBufferSize).whenNonNull().asInt(DataSize::toBytes)
+				.to(factory::setBufferSize);
 		propertyMapper.from(undertowProperties::getIoThreads).to(factory::setIoThreads);
-		propertyMapper.from(undertowProperties::getWorkerThreads)
-				.to(factory::setWorkerThreads);
-		propertyMapper.from(undertowProperties::getDirectBuffers)
-				.to(factory::setUseDirectBuffers);
-		propertyMapper.from(accesslogProperties::isEnabled)
-				.to(factory::setAccessLogEnabled);
-		propertyMapper.from(accesslogProperties::getDir)
-				.to(factory::setAccessLogDirectory);
-		propertyMapper.from(accesslogProperties::getPattern)
-				.to(factory::setAccessLogPattern);
-		propertyMapper.from(accesslogProperties::getPrefix)
-				.to(factory::setAccessLogPrefix);
-		propertyMapper.from(accesslogProperties::getSuffix)
-				.to(factory::setAccessLogSuffix);
-		propertyMapper.from(accesslogProperties::isRotate)
-				.to(factory::setAccessLogRotate);
-		propertyMapper.from(this::getOrDeduceUseForwardHeaders)
-				.to(factory::setUseForwardHeaders);
+		propertyMapper.from(undertowProperties::getWorkerThreads).to(factory::setWorkerThreads);
+		propertyMapper.from(undertowProperties::getDirectBuffers).to(factory::setUseDirectBuffers);
+		propertyMapper.from(accesslogProperties::isEnabled).to(factory::setAccessLogEnabled);
+		propertyMapper.from(accesslogProperties::getDir).to(factory::setAccessLogDirectory);
+		propertyMapper.from(accesslogProperties::getPattern).to(factory::setAccessLogPattern);
+		propertyMapper.from(accesslogProperties::getPrefix).to(factory::setAccessLogPrefix);
+		propertyMapper.from(accesslogProperties::getSuffix).to(factory::setAccessLogSuffix);
+		propertyMapper.from(accesslogProperties::isRotate).to(factory::setAccessLogRotate);
+		propertyMapper.from(this::getOrDeduceUseForwardHeaders).to(factory::setUseForwardHeaders);
 
-		propertyMapper.from(properties::getMaxHttpHeaderSize).whenNonNull()
-				.asInt(DataSize::toBytes).when(this::isPositive)
-				.to((maxHttpHeaderSize) -> customizeServerOption(factory,
+		propertyMapper.from(properties::getMaxHttpHeaderSize).whenNonNull().asInt(DataSize::toBytes)
+				.when(this::isPositive).to((maxHttpHeaderSize) -> customizeServerOption(factory,
 						UndertowOptions.MAX_HEADER_SIZE, maxHttpHeaderSize));
 
-		propertyMapper.from(undertowProperties::getMaxHttpPostSize).as(DataSize::toBytes)
-				.when(this::isPositive)
-				.to((maxHttpPostSize) -> customizeServerOption(factory,
-						UndertowOptions.MAX_ENTITY_SIZE, maxHttpPostSize));
+		propertyMapper.from(undertowProperties::getMaxHttpPostSize).as(DataSize::toBytes).when(this::isPositive).to(
+				(maxHttpPostSize) -> customizeServerOption(factory, UndertowOptions.MAX_ENTITY_SIZE, maxHttpPostSize));
 
-		propertyMapper.from(properties::getConnectionTimeout)
-				.to((connectionTimeout) -> customizeServerOption(factory,
-						UndertowOptions.NO_REQUEST_TIMEOUT,
-						(int) connectionTimeout.toMillis()));
+		propertyMapper.from(properties::getConnectionTimeout).to((connectionTimeout) -> customizeServerOption(factory,
+				UndertowOptions.NO_REQUEST_TIMEOUT, (int) connectionTimeout.toMillis()));
 
 		propertyMapper.from(undertowProperties::getMaxParameters)
-				.to((maxParameters) -> customizeServerOption(factory,
-						UndertowOptions.MAX_PARAMETERS, maxParameters));
+				.to((maxParameters) -> customizeServerOption(factory, UndertowOptions.MAX_PARAMETERS, maxParameters));
 
 		propertyMapper.from(undertowProperties::getMaxHeaders)
-				.to((maxHeaders) -> customizeServerOption(factory,
-						UndertowOptions.MAX_HEADERS, maxHeaders));
+				.to((maxHeaders) -> customizeServerOption(factory, UndertowOptions.MAX_HEADERS, maxHeaders));
 
 		propertyMapper.from(undertowProperties::getMaxCookies)
-				.to((maxCookies) -> customizeServerOption(factory,
-						UndertowOptions.MAX_COOKIES, maxCookies));
+				.to((maxCookies) -> customizeServerOption(factory, UndertowOptions.MAX_COOKIES, maxCookies));
 
 		propertyMapper.from(undertowProperties::isAllowEncodedSlash)
-				.to((allowEncodedSlash) -> customizeServerOption(factory,
-						UndertowOptions.ALLOW_ENCODED_SLASH, allowEncodedSlash));
+				.to((allowEncodedSlash) -> customizeServerOption(factory, UndertowOptions.ALLOW_ENCODED_SLASH,
+						allowEncodedSlash));
 
 		propertyMapper.from(undertowProperties::isDecodeUrl)
-				.to((isDecodeUrl) -> customizeServerOption(factory,
-						UndertowOptions.DECODE_URL, isDecodeUrl));
+				.to((isDecodeUrl) -> customizeServerOption(factory, UndertowOptions.DECODE_URL, isDecodeUrl));
 
 		propertyMapper.from(undertowProperties::getUrlCharset)
-				.to((urlCharset) -> customizeServerOption(factory,
-						UndertowOptions.URL_CHARSET, urlCharset.name()));
+				.to((urlCharset) -> customizeServerOption(factory, UndertowOptions.URL_CHARSET, urlCharset.name()));
 
 		propertyMapper.from(undertowProperties::isAlwaysSetKeepAlive)
-				.to((alwaysSetKeepAlive) -> customizeServerOption(factory,
-						UndertowOptions.ALWAYS_SET_KEEP_ALIVE, alwaysSetKeepAlive));
+				.to((alwaysSetKeepAlive) -> customizeServerOption(factory, UndertowOptions.ALWAYS_SET_KEEP_ALIVE,
+						alwaysSetKeepAlive));
 
-		factory.addDeploymentInfoCustomizers((deploymentInfo) -> deploymentInfo
-				.setEagerFilterInit(undertowProperties.isEagerFilterInit()));
+		propertyMapper.from(undertowOptions::getServer)
+				.to((server) -> server.forEach((key, value) -> setCustomOption(factory, key, value, "server")));
+
+		propertyMapper.from(undertowOptions::getSocket)
+				.to((socket) -> socket.forEach((key, value) -> setCustomOption(factory, key, value, "socket")));
+
+		factory.addDeploymentInfoCustomizers(
+				(deploymentInfo) -> deploymentInfo.setEagerFilterInit(undertowProperties.isEagerFilterInit()));
 	}
 
 	private boolean isPositive(Number value) {
 		return value.longValue() > 0;
 	}
 
-	private <T> void customizeServerOption(ConfigurableUndertowWebServerFactory factory,
-			Option<T> option, T value) {
-		factory.addBuilderCustomizers(
-				(builder) -> builder.setServerOption(option, value));
+	private <T> void customizeServerOption(ConfigurableUndertowWebServerFactory factory, Option<T> option, T value) {
+		factory.addBuilderCustomizers((builder) -> builder.setServerOption(option, value));
+	}
+
+	private <T> void customizeSocketOption(ConfigurableUndertowWebServerFactory factory, Option<T> option, T value) {
+		factory.addBuilderCustomizers((builder) -> builder.setSocketOption(option, value));
 	}
 
 	private boolean getOrDeduceUseForwardHeaders() {
-		if (this.serverProperties.getForwardHeadersStrategy()
-				.equals(ServerProperties.ForwardHeadersStrategy.NONE)) {
+		if (this.serverProperties.getForwardHeadersStrategy().equals(ServerProperties.ForwardHeadersStrategy.NONE)) {
 			CloudPlatform platform = CloudPlatform.getActive(this.environment);
 			return platform != null && platform.isUsingForwardHeaders();
 		}
-		return this.serverProperties.getForwardHeadersStrategy()
-				.equals(ServerProperties.ForwardHeadersStrategy.NATIVE);
+		return this.serverProperties.getForwardHeadersStrategy().equals(ServerProperties.ForwardHeadersStrategy.NATIVE);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> void setCustomOption(ConfigurableUndertowWebServerFactory factory, String key, String value,
+			String type) {
+		Field[] fields = UndertowOptions.class.getDeclaredFields();
+		for (Field field : fields) {
+			if (getCanonicalName(field.getName()).equals(getCanonicalName(key))) {
+				Option<T> option = (Option<T>) Option.fromString(
+						UndertowOptions.class.getName() + '.' + field.getName(), getClass().getClassLoader());
+				T parsed = option.parseValue(value, getClass().getClassLoader());
+				if (type.equals("server")) {
+					customizeServerOption(factory, option, parsed);
+				}
+				else if (type.equals("socket")) {
+					customizeSocketOption(factory, option, parsed);
+				}
+				return;
+			}
+		}
+	}
+
+	private String getCanonicalName(String key) {
+		StringBuilder canonicalName = new StringBuilder(key.length());
+		key.chars().map((c) -> (char) c).filter(Character::isLetterOrDigit).map(Character::toLowerCase)
+				.forEach((c) -> canonicalName.append((char) c));
+		return canonicalName.toString();
 	}
 
 }

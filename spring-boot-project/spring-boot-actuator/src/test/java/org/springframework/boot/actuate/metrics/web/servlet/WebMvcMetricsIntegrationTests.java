@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.metrics.Autotime;
+import org.springframework.boot.actuate.metrics.AutoTimer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -58,7 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @TestPropertySource(properties = "security.ignored=/**")
-public class WebMvcMetricsIntegrationTests {
+class WebMvcMetricsIntegrationTests {
 
 	@Autowired
 	private WebApplicationContext context;
@@ -72,26 +72,22 @@ public class WebMvcMetricsIntegrationTests {
 	private MockMvc mvc;
 
 	@BeforeEach
-	public void setupMockMvc() {
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.context)
-				.addFilters(this.filter).build();
+	void setupMockMvc() {
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).addFilters(this.filter).build();
 	}
 
 	@Test
-	public void handledExceptionIsRecordedInMetricTag() throws Exception {
+	void handledExceptionIsRecordedInMetricTag() throws Exception {
 		this.mvc.perform(get("/api/handledError")).andExpect(status().is5xxServerError());
-		assertThat(this.registry.get("http.server.requests")
-				.tags("exception", "Exception1", "status", "500").timer().count())
-						.isEqualTo(1L);
+		assertThat(this.registry.get("http.server.requests").tags("exception", "Exception1", "status", "500").timer()
+				.count()).isEqualTo(1L);
 	}
 
 	@Test
-	public void rethrownExceptionIsRecordedInMetricTag() {
-		assertThatCode(() -> this.mvc.perform(get("/api/rethrownError"))
-				.andExpect(status().is5xxServerError()));
-		assertThat(this.registry.get("http.server.requests")
-				.tags("exception", "Exception2", "status", "500").timer().count())
-						.isEqualTo(1L);
+	void rethrownExceptionIsRecordedInMetricTag() {
+		assertThatCode(() -> this.mvc.perform(get("/api/rethrownError")).andExpect(status().is5xxServerError()));
+		assertThat(this.registry.get("http.server.requests").tags("exception", "Exception2", "status", "500").timer()
+				.count()).isEqualTo(1L);
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -109,10 +105,9 @@ public class WebMvcMetricsIntegrationTests {
 		}
 
 		@Bean
-		public WebMvcMetricsFilter webMetricsFilter(MeterRegistry registry,
-				WebApplicationContext ctx) {
-			return new WebMvcMetricsFilter(registry, new DefaultWebMvcTagsProvider(),
-					"http.server.requests", new Autotime());
+		WebMvcMetricsFilter webMetricsFilter(MeterRegistry registry, WebApplicationContext ctx) {
+			return new WebMvcMetricsFilter(registry, new DefaultWebMvcTagsProvider(), "http.server.requests",
+					AutoTimer.ENABLED);
 		}
 
 		@Configuration(proxyBeanMethods = false)
@@ -122,17 +117,17 @@ public class WebMvcMetricsIntegrationTests {
 		static class Controller1 {
 
 			@Bean
-			public CustomExceptionHandler controllerAdvice() {
+			CustomExceptionHandler controllerAdvice() {
 				return new CustomExceptionHandler();
 			}
 
 			@GetMapping("/handledError")
-			public String handledError() {
+			String handledError() {
 				throw new Exception1();
 			}
 
 			@GetMapping("/rethrownError")
-			public String rethrownError() {
+			String rethrownError() {
 				throw new Exception2();
 			}
 
@@ -153,8 +148,7 @@ public class WebMvcMetricsIntegrationTests {
 
 		@ExceptionHandler
 		ResponseEntity<String> handleError(Exception1 ex) {
-			return new ResponseEntity<>("this is a custom exception body",
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>("this is a custom exception body", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		@ExceptionHandler

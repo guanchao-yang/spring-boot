@@ -23,11 +23,13 @@ import org.testcontainers.containers.GenericContainer;
  *
  * @author Andy Wilkinson
  * @author Madhura Bhave
+ * @since 2.0.0
  */
-public class RedisContainer extends Container {
+public class RedisContainer extends GenericContainer<RedisContainer> {
 
 	public RedisContainer() {
-		super("redis:4.0.6", 6379);
+		super("redis:4.0.6");
+		addExposedPorts(6379);
 	}
 
 }

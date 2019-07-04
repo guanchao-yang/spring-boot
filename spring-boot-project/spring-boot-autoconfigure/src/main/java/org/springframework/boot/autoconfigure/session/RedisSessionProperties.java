@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package org.springframework.boot.autoconfigure.session;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.session.data.redis.RedisFlushMode;
+import org.springframework.session.FlushMode;
 
 /**
  * Configuration properties for Redis backed Spring Session.
@@ -38,7 +38,13 @@ public class RedisSessionProperties {
 	/**
 	 * Sessions flush mode.
 	 */
-	private RedisFlushMode flushMode = RedisFlushMode.ON_SAVE;
+	private FlushMode flushMode = FlushMode.ON_SAVE;
+
+	/**
+	 * The configure action to apply when no user defined ConfigureRedisAction bean is
+	 * present.
+	 */
+	private ConfigureAction configureAction = ConfigureAction.NOTIFY_KEYSPACE_EVENTS;
 
 	/**
 	 * Cron expression for expired session cleanup job.
@@ -53,11 +59,11 @@ public class RedisSessionProperties {
 		this.namespace = namespace;
 	}
 
-	public RedisFlushMode getFlushMode() {
+	public FlushMode getFlushMode() {
 		return this.flushMode;
 	}
 
-	public void setFlushMode(RedisFlushMode flushMode) {
+	public void setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
 	}
 
@@ -67,6 +73,32 @@ public class RedisSessionProperties {
 
 	public void setCleanupCron(String cleanupCron) {
 		this.cleanupCron = cleanupCron;
+	}
+
+	public ConfigureAction getConfigureAction() {
+		return this.configureAction;
+	}
+
+	public void setConfigureAction(ConfigureAction configureAction) {
+		this.configureAction = configureAction;
+	}
+
+	/**
+	 * Strategies for configuring and validating Redis.
+	 */
+	public enum ConfigureAction {
+
+		/**
+		 * Ensure that Redis Keyspace events for Generic commands and Expired events are
+		 * enabled.
+		 */
+		NOTIFY_KEYSPACE_EVENTS,
+
+		/**
+		 * No not attempt to apply any custom Redis configuration.
+		 */
+		NONE
+
 	}
 
 }

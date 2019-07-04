@@ -57,7 +57,11 @@ public class CouchbaseConfiguration {
 	@Bean
 	@Primary
 	public Cluster couchbaseCluster() {
-		return CouchbaseCluster.create(couchbaseEnvironment(), determineBootstrapHosts());
+		CouchbaseCluster couchbaseCluster = CouchbaseCluster.create(couchbaseEnvironment(), determineBootstrapHosts());
+		if (isRoleBasedAccessControlEnabled()) {
+			return couchbaseCluster.authenticate(this.properties.getUsername(), this.properties.getPassword());
+		}
+		return couchbaseCluster;
 	}
 
 	/**
@@ -72,15 +76,23 @@ public class CouchbaseConfiguration {
 	@Primary
 	@DependsOn("couchbaseClient")
 	public ClusterInfo couchbaseClusterInfo() {
-		return couchbaseCluster().clusterManager(this.properties.getBucket().getName(),
-				this.properties.getBucket().getPassword()).info();
+		return couchbaseCluster()
+				.clusterManager(this.properties.getBucket().getName(), this.properties.getBucket().getPassword())
+				.info();
 	}
 
 	@Bean
 	@Primary
 	public Bucket couchbaseClient() {
+		if (isRoleBasedAccessControlEnabled()) {
+			return couchbaseCluster().openBucket(this.properties.getBucket().getName());
+		}
 		return couchbaseCluster().openBucket(this.properties.getBucket().getName(),
 				this.properties.getBucket().getPassword());
+	}
+
+	private boolean isRoleBasedAccessControlEnabled() {
+		return this.properties.getUsername() != null && this.properties.getPassword() != null;
 	}
 
 	/**
@@ -88,17 +100,14 @@ public class CouchbaseConfiguration {
 	 * @param properties the couchbase properties to use
 	 * @return the {@link DefaultCouchbaseEnvironment} builder.
 	 */
-	protected DefaultCouchbaseEnvironment.Builder initializeEnvironmentBuilder(
-			CouchbaseProperties properties) {
+	protected DefaultCouchbaseEnvironment.Builder initializeEnvironmentBuilder(CouchbaseProperties properties) {
 		CouchbaseProperties.Endpoints endpoints = properties.getEnv().getEndpoints();
 		CouchbaseProperties.Timeouts timeouts = properties.getEnv().getTimeouts();
-		DefaultCouchbaseEnvironment.Builder builder = DefaultCouchbaseEnvironment
-				.builder();
+		DefaultCouchbaseEnvironment.Builder builder = DefaultCouchbaseEnvironment.builder();
 		if (timeouts.getConnect() != null) {
 			builder = builder.connectTimeout(timeouts.getConnect().toMillis());
 		}
-		builder = builder.keyValueServiceConfig(
-				KeyValueServiceConfig.create(endpoints.getKeyValue()));
+		builder = builder.keyValueServiceConfig(KeyValueServiceConfig.create(endpoints.getKeyValue()));
 		if (timeouts.getKeyValue() != null) {
 			builder = builder.kvTimeout(timeouts.getKeyValue().toMillis());
 		}
@@ -108,8 +117,7 @@ public class CouchbaseConfiguration {
 			builder = builder.viewServiceConfig(getViewServiceConfig(endpoints));
 		}
 		if (timeouts.getSocketConnect() != null) {
-			builder = builder
-					.socketConnectTimeout((int) timeouts.getSocketConnect().toMillis());
+			builder = builder.socketConnectTimeout((int) timeouts.getSocketConnect().toMillis());
 		}
 		if (timeouts.getView() != null) {
 			builder = builder.viewTimeout(timeouts.getView().toMillis());
