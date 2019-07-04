@@ -21,16 +21,11 @@ import javax.sql.DataSource;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 /**
@@ -48,42 +43,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 @ConditionalOnSingleCandidate(DataSource.class)
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @EnableConfigurationProperties(JdbcProperties.class)
+@Import({ JdbcTemplateConfiguration.class, NamedParameterJdbcTemplateConfiguration.class })
 public class JdbcTemplateAutoConfiguration {
-
-	@Configuration(proxyBeanMethods = false)
-	static class JdbcTemplateConfiguration {
-
-		@Bean
-		@Primary
-		@ConditionalOnMissingBean(JdbcOperations.class)
-		public JdbcTemplate jdbcTemplate(DataSource dataSource,
-				JdbcProperties properties) {
-			JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-			JdbcProperties.Template template = properties.getTemplate();
-			jdbcTemplate.setFetchSize(template.getFetchSize());
-			jdbcTemplate.setMaxRows(template.getMaxRows());
-			if (template.getQueryTimeout() != null) {
-				jdbcTemplate
-						.setQueryTimeout((int) template.getQueryTimeout().getSeconds());
-			}
-			return jdbcTemplate;
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@Import(JdbcTemplateConfiguration.class)
-	static class NamedParameterJdbcTemplateConfiguration {
-
-		@Bean
-		@Primary
-		@ConditionalOnSingleCandidate(JdbcTemplate.class)
-		@ConditionalOnMissingBean(NamedParameterJdbcOperations.class)
-		public NamedParameterJdbcTemplate namedParameterJdbcTemplate(
-				JdbcTemplate jdbcTemplate) {
-			return new NamedParameterJdbcTemplate(jdbcTemplate);
-		}
-
-	}
 
 }

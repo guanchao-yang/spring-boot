@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Brian Clozel
  * @author Eddú Meléndez
+ * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({ Mono.class, Flux.class })
@@ -39,7 +40,7 @@ public class ReactorCoreAutoConfiguration {
 
 	@Autowired
 	protected void initialize(ReactorCoreProperties properties) {
-		if (properties.getStacktraceMode().isEnabled()) {
+		if (properties.isDebug()) {
 			Hooks.onOperatorDebug();
 		}
 	}

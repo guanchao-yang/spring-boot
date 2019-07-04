@@ -16,8 +16,7 @@
 
 package org.springframework.boot.actuate.autoconfigure.env;
 
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnExposedEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint;
 import org.springframework.boot.actuate.env.EnvironmentEndpointWebExtension;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -36,15 +35,13 @@ import org.springframework.core.env.Environment;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnEnabledEndpoint(endpoint = EnvironmentEndpoint.class)
-@ConditionalOnExposedEndpoint(endpoint = EnvironmentEndpoint.class)
+@ConditionalOnAvailableEndpoint(endpoint = EnvironmentEndpoint.class)
 @EnableConfigurationProperties(EnvironmentEndpointProperties.class)
 public class EnvironmentEndpointAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public EnvironmentEndpoint environmentEndpoint(Environment environment,
-			EnvironmentEndpointProperties properties) {
+	public EnvironmentEndpoint environmentEndpoint(Environment environment, EnvironmentEndpointProperties properties) {
 		EnvironmentEndpoint endpoint = new EnvironmentEndpoint(environment);
 		String[] keysToSanitize = properties.getKeysToSanitize();
 		if (keysToSanitize != null) {
@@ -56,8 +53,7 @@ public class EnvironmentEndpointAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnBean(EnvironmentEndpoint.class)
-	public EnvironmentEndpointWebExtension environmentEndpointWebExtension(
-			EnvironmentEndpoint environmentEndpoint) {
+	public EnvironmentEndpointWebExtension environmentEndpointWebExtension(EnvironmentEndpoint environmentEndpoint) {
 		return new EnvironmentEndpointWebExtension(environmentEndpoint);
 	}
 

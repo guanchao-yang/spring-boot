@@ -88,6 +88,14 @@
 					<groupId>javax.activation</groupId>
 					<artifactId>activation</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-library</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -401,6 +409,12 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -479,6 +493,11 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -660,7 +679,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-library</artifactId>
+			<artifactId>hamcrest</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -740,7 +759,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
-			<artifactId>infinispan-spring4-embedded</artifactId>
+			<artifactId>infinispan-spring5-embedded</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -1423,18 +1442,27 @@
 						<artifactId>asciidoctor-maven-plugin</artifactId>
 						<configuration>
 							<sourceDirectory>${refdocs.build.directory}</sourceDirectory>
-							<outputDirectory>${project.build.directory}/generated-docs/reference/html</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${refdocs.build.directory}</directory>
+									<excludes>
+										<exclude>**/*.*adoc</exclude>
+									</excludes>
+								</resource>
+							</resources>
 							<attributes>
-								<spring-boot-docs-version>${revision}</spring-boot-docs-version>
+								<sources-root>${project.basedir}/src</sources-root>
+								<asciidoc-sources-root>${project.basedir}/src/main/asciidoc</asciidoc-sources-root>
+								<generated-resources-root>${project.basedir}/target/generated-resources</generated-resources-root>
 								<spring-boot-repo>${spring-boot-repo}</spring-boot-repo>
+								<github-tag>${github-tag}</github-tag>
+								<jooq-version>${jooq.version}</jooq-version>
+								<spring-boot-docs-version>${revision}</spring-boot-docs-version>
+								<spring-boot-version>${revision}</spring-boot-version>
+								<spring-docs-version>${spring-framework.version}</spring-docs-version>
+								<spring-framework-version>${spring-framework.version}</spring-framework-version>
 								<spring-security-docs-version>${spring-security.version}</spring-security-docs-version>
 								<spring-webservices-docs-version>${spring-ws.version}</spring-webservices-docs-version>
-								<github-tag>${github-tag}</github-tag>
-								<spring-version>${spring.version}</spring-version>
-								<spring-docs-version>${spring.version}</spring-docs-version>
-								<spring-boot-version>${revision}</spring-boot-version>
-								<sources-root>${project.basedir}/src/</sources-root>
-								<generated-resources-root>${project.basedir}/target/generated-resources</generated-resources-root>
 							</attributes>
 						</configuration>
 						<executions>
@@ -1446,6 +1474,43 @@
 								</goals>
 								<configuration>
 									<backend>html5</backend>
+									<sourceDocumentExtensions>
+										<sourceDocumentExtension>adoc</sourceDocumentExtension>
+										<sourceDocumentExtension>htmladoc</sourceDocumentExtension>
+									</sourceDocumentExtensions>
+									<outputDirectory>${project.build.directory}/generated-docs/reference/html</outputDirectory>
+									<sourceHighlighter>highlight.js</sourceHighlighter>
+									<doctype>book</doctype>
+									<attributes>
+										<highlightjsdir>js/highlight</highlightjsdir>
+										<highlightjs-theme>atom-one-dark-reasonable</highlightjs-theme>
+										<linkcss>true</linkcss>
+										<imagesdir>./images</imagesdir>
+										<icons>font</icons>
+										<stylesdir>css/</stylesdir>
+										<stylesheet>spring.css</stylesheet>
+										<attribute-missing>warn</attribute-missing>
+									</attributes>
+									<logHandler>
+										<outputToConsole>true</outputToConsole>
+										<failIf>
+											<severity>DEBUG</severity>
+										</failIf>
+									</logHandler>
+								</configuration>
+							</execution>
+							<execution>
+								<id>generate-htmlsingle-documentation</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>process-asciidoc</goal>
+								</goals>
+								<configuration>
+									<backend>html5</backend>
+									<sourceDocumentExtensions>
+										<sourceDocumentExtension>htmlsingleadoc</sourceDocumentExtension>
+									</sourceDocumentExtensions>
+									<outputDirectory>${project.build.directory}/generated-docs/reference/htmlsingle</outputDirectory>
 									<sourceHighlighter>highlight.js</sourceHighlighter>
 									<doctype>book</doctype>
 									<attributes>
@@ -1457,6 +1522,28 @@
 										<stylesdir>css/</stylesdir>
 										<stylesheet>spring.css</stylesheet>
 									</attributes>
+								</configuration>
+							</execution>
+							<execution>
+								<id>generate-pdf-documentation</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>process-asciidoc</goal>
+								</goals>
+								<configuration>
+									<backend>pdf</backend>
+									<sourceDocumentExtensions>
+										<sourceDocumentExtension>pdfadoc</sourceDocumentExtension>
+									</sourceDocumentExtensions>
+									<outputDirectory>${project.build.directory}/generated-docs/reference/pdf</outputDirectory>
+									<resources>
+										<resource>
+											<directory>${refdocs.build.directory}</directory>
+											<excludes>
+												<exclude>**/*</exclude>
+											</excludes>
+										</resource>
+									</resources>
 								</configuration>
 							</execution>
 						</executions>

@@ -41,17 +41,13 @@ public class ValidationExceptionFailureAnalyzerTests {
 	@Test
 	public void validatedPropertiesTest() {
 		assertThatExceptionOfType(Exception.class)
-				.isThrownBy(() -> new AnnotationConfigApplicationContext(
-						TestConfiguration.class).close())
-				.satisfies((ex) -> assertThat(
-						new ValidationExceptionFailureAnalyzer().analyze(ex))
-								.isNotNull());
+				.isThrownBy(() -> new AnnotationConfigApplicationContext(TestConfiguration.class).close())
+				.satisfies((ex) -> assertThat(new ValidationExceptionFailureAnalyzer().analyze(ex)).isNotNull());
 	}
 
 	@Test
 	public void nonValidatedPropertiesTest() {
-		new AnnotationConfigApplicationContext(NonValidatedTestConfiguration.class)
-				.close();
+		new AnnotationConfigApplicationContext(NonValidatedTestConfiguration.class).close();
 	}
 
 	@EnableConfigurationProperties(TestProperties.class)
@@ -64,7 +60,7 @@ public class ValidationExceptionFailureAnalyzerTests {
 
 	@ConfigurationProperties("test")
 	@Validated
-	private static class TestProperties {
+	static class TestProperties {
 
 	}
 
@@ -77,7 +73,7 @@ public class ValidationExceptionFailureAnalyzerTests {
 	}
 
 	@ConfigurationProperties("test")
-	private static class NonValidatedTestProperties {
+	static class NonValidatedTestProperties {
 
 	}
 
