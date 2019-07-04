@@ -296,8 +296,7 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
-		System.out.println(
-				"org.springframework.boot.SpringApplication.run(java.lang.String...) running begin");
+		System.out.println("org.springframework.boot.SpringApplication.run(java.lang.String...) running begin");
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		ConfigurableApplicationContext context = null;
@@ -306,18 +305,12 @@ public class SpringApplication {
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		listeners.starting();
 		try {
-<<<<<<< HEAD
 			System.out.println("DefaultApplicationArguments");
-			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
-					args);
-			System.out.println("prepareEnvironment");
-			ConfigurableEnvironment environment = prepareEnvironment(listeners,
-					applicationArguments);
-			System.out.println("configureIgnoreBeanInfo");
-=======
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			System.out.println("prepareEnvironment");
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
->>>>>>> master
+			System.out.println("configureIgnoreBeanInfo");
+
 			configureIgnoreBeanInfo(environment);
 			System.out.println("banner before");
 			Banner printedBanner = printBanner(environment);
@@ -325,17 +318,13 @@ public class SpringApplication {
 			context = createApplicationContext();
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
-<<<<<<< HEAD
-			prepareContext(context, environment, listeners, applicationArguments,
-					printedBanner);
-			System.out.println(
-					"org.springframework.boot.SpringApplication.refreshContext begin");
-=======
+
+			System.out.println("org.springframework.boot.SpringApplication.refreshContext begin");
+
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
->>>>>>> master
+
 			refreshContext(context);
-			System.out.println(
-					"org.springframework.boot.SpringApplication.refreshContext end");
+			System.out.println("org.springframework.boot.SpringApplication.refreshContext end");
 			afterRefresh(context, applicationArguments);
 			stopWatch.stop();
 			if (this.logStartupInfo) {
@@ -357,8 +346,7 @@ public class SpringApplication {
 			handleRunFailure(context, ex, exceptionReporters, null);
 			throw new IllegalStateException(ex);
 		}
-		System.out.println(
-				"org.springframework.boot.SpringApplication.run(java.lang.String...) running end");
+		System.out.println("org.springframework.boot.SpringApplication.run(java.lang.String...) running end");
 		return context;
 	}
 
@@ -584,18 +572,12 @@ public class SpringApplication {
 		if (this.bannerMode == Banner.Mode.OFF) {
 			return null;
 		}
-<<<<<<< HEAD
-		ResourceLoader resourceLoader = (this.resourceLoader != null)
-				? this.resourceLoader : new DefaultResourceLoader(getClassLoader());
-		System.out.println("resourceLoader after");
-		SpringApplicationBannerPrinter bannerPrinter = new SpringApplicationBannerPrinter(
-				resourceLoader, this.banner);
-		System.out.println("SpringApplicationBannerPrinter");
-=======
 		ResourceLoader resourceLoader = (this.resourceLoader != null) ? this.resourceLoader
 				: new DefaultResourceLoader(getClassLoader());
+		System.out.println("resourceLoader after");
 		SpringApplicationBannerPrinter bannerPrinter = new SpringApplicationBannerPrinter(resourceLoader, this.banner);
->>>>>>> master
+		System.out.println("SpringApplicationBannerPrinter");
+
 		if (this.bannerMode == Mode.LOG) {
 			return bannerPrinter.print(environment, this.mainApplicationClass, logger);
 		}
